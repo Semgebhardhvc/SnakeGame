@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    canvas {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const boxSize = 20;
+      const canvasSize = canvas.width;
+      const snake = [{ x: 10, y: 10 }];
+      let direction = 'right';
+      let apple = { x: 15, y: 15 };
+
+      function draw() {
+        // Draw the snake
+        ctx.fillStyle = '#00f';
+        for (let i = 0; i < snake.length; i++) {
+          ctx.fillRect(snake[i].x * boxSize, snake[i].y * boxSize, boxSize, boxSize);
+        }
+
+        // Draw the apple
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(apple.x * boxSize, apple.y * boxSize, boxSize, boxSize);
+      }
+
+      function move() {
+        let headX = snake[0].x;
+        let headY = snake[0].y;
+
+        // Update the snake's position based on the direction
+        if (direction === 'right') headX++;
+        else if (direction === 'left') headX--;
+        else if (direction === 'up') headY--;
+        else if (direction === 'down') headY++;
+
+        // Check if the snake eats the apple
+        if (headX === apple.x && headY === apple.y) {
+          snake.unshift({ x: headX, y: headY }); // Add a new head
+          generateApple(); // Generate a new apple
+        } else {
+          // Remove the tail if the snake did not eat an apple
+          snake.pop();
+          // Check for collisions with walls or itself
+          if (
+            headX < 0 ||
+            headY < 0 ||
+            headX >= canvasSize / boxSize ||
+            headY >= canvasSize / boxSize ||
+            checkCollision(headX, headY)
+          ) {
+            // Game over
+            resetGame();
+          }
+          // Add the new head to the snake
+          snake.unshift({ x: headX, y: headY });
+        }
+      }
+
+      function generateApple() {
+        // Generate a new random position for the apple
+        apple = {
+          x: Math.floor(Math.random() * (canvasSize / boxSize)),
+          y: Math.floor(Math.random() * (canvasSize / boxSize))
+        };
+        // Make sure the apple is not inside the snake
+        while (checkCollision(apple.x, apple.y)) {
+          apple = {
+            x: Math.floor(Math.random() * (canvasSize / boxSize)),
+            y: Math.floor(Math.random() * (canvasSize / boxSize))
+          };
+        }
+      }
+
+      function checkCollision(x, y) {
+        // Check if the given position is inside the snake
+        for (let i = 0; i < snake.length; i++) {
+          if (snake[i].x === x && snake[i].y === y) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function resetGame() {
+        alert('Game Over! Press OK to play again.');
+        snake.length = 1;
+        snake[0] = { x: 10, y: 10 };
+        direction = 'right';
+        generateApple();
+      }
+
+      function gameLoop() {
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+        // Move and draw the snake
+        move();
+        draw();
+
+        // Call the game loop again
+        requestAnimationFrame(gameLoop);
+      }
+
+      // Handle keyboard input
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowUp' && direction !== 'down') {
+          direction = 'up';
+        } else if (event.key === 'ArrowDown' && direction !== 'up') {
+          direction = 'down';
+        } else if (event.key === 'ArrowLeft' && direction !== 'right') {
+          direction = 'left';
+        } else if (event.key === 'ArrowRight' && direction !== 'left') {
+          direction = 'right';
+        }
+      });
+
+      // Start the game loop
+      gameLoop();
+    });
+  </script>
+</body>
+</html>
